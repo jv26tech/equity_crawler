@@ -188,7 +188,7 @@ class YahooEquityCrawler:
             logging.warning(f"Falha ao definir 100 linhas: {e}")
 
     def save_to_csv(self):
-        filename = f"stocks_{self.region.replace(' ', '_').lower()}.csv"
+        filename = f"outputs/stocks_{self.region.replace(' ', '_').lower()}.csv"
 
         if not self.data:
             logging.warning("Sem dados para salvar.")
