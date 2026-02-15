@@ -82,35 +82,55 @@ class TestYahooEquityCrawler(unittest.TestCase):
     def test_apply_region_filter(self, MockWait):
         wait = MockWait.return_value
 
-        mock_us_input = MagicMock()
-        mock_us_input.is_selected.return_value = True
+        # Mocks para os elementos
+        mock_region_btn = MagicMock()
+        mock_modal = MagicMock()
 
         mock_us_label = MagicMock()
-        mock_us_label.find_element.return_value = mock_us_input
-
+        mock_us_input = MagicMock()
         mock_search = MagicMock()
         mock_target = MagicMock()
         mock_apply = MagicMock()
-        mock_modal = MagicMock()
 
-        # Sequência: Cookie -> Region Btn -> Modal Visible -> Invisibility
-        wait.until.side_effect = [MagicMock(), MagicMock(), mock_modal, True]
+        # Configuração: Simula que 'United States' está marcado (true)
+        mock_us_input.is_selected.return_value = True
+        mock_us_label.find_element.return_value = mock_us_input
 
+        # Configuração: WebDriverWait
+        # A ordem exata das chamadas no código é:
+        # 1. Botão Region -> Retorna o botão
+        # 2. Modal Visível -> Retorna o CONTAINER do modal (IMPORTANTE)
+        # 3. Modal Invisível -> Retorna True/None
+        wait.until.side_effect = [mock_region_btn, mock_modal, True]
+
+        # Configuração: Busca dentro do Modal
         def modal_side_effect(by, value):
-            if "United States" in str(value): return mock_us_label
-            if "Search" in str(value): return mock_search
-            if self.crawler.region in str(value): return mock_target
-            if "Apply" in str(value): return mock_apply
+            val_str = str(value)
+            if "United States" in val_str: return mock_us_label
+            if "Search" in val_str: return mock_search
+            if self.crawler.region in val_str: return mock_target
+            if "Apply" in val_str: return mock_apply
             return MagicMock()
 
         mock_modal.find_element.side_effect = modal_side_effect
 
+        # Execução
         self.crawler._apply_region_filter()
 
+        # Asserts
         self.mock_driver.get.assert_called_with(self.crawler.BASE_URL)
+
+        # Confirma clique no botão Region (via JS)
+        self.mock_driver.execute_script.assert_any_call("arguments[0].click();", mock_region_btn)
+
+        # Confirma lógica de desmarcar US
         mock_us_label.click.assert_called()
+
+        # Confirma busca e seleção da região alvo
         mock_search.send_keys.assert_called_with("Spain")
         mock_target.click.assert_called()
+
+        # Confirma clique no Apply
         self.mock_driver.execute_script.assert_any_call("arguments[0].click();", mock_apply)
 
     def test_run_flow(self):
@@ -137,7 +157,7 @@ class TestYahooEquityCrawler(unittest.TestCase):
         ]
         with patch("builtins.open", mock_open()) as mock_file:
             self.crawler.save_to_csv()
-            mock_file.assert_called_with("stocks_spain.csv", 'w', newline='', encoding='utf-8')
+            mock_file.assert_called_with("outputs/stocks_spain.csv", 'w', newline='', encoding='utf-8')
             self.assertTrue(mock_file().write.called)
 
     def test_save_to_csv_empty(self):
