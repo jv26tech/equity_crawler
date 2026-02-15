@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class YahooEquityCrawler:
     """
-    Crawler para extrair dados do Yahoo Finance Screener filtrando por região.
+    Crawler para extrair dados do Yahoo Finance filtrando por região.
     """
 
     BASE_URL = "https://finance.yahoo.com/research-hub/screener/equity/"
@@ -25,7 +25,8 @@ class YahooEquityCrawler:
         self.data: List[Dict[str, str]] = []
         self.driver = self._setup_driver()
 
-    def _setup_driver(self) -> webdriver.Chrome:
+    @staticmethod
+    def _setup_driver() -> webdriver.Chrome:
         options = Options()
         # options.add_argument("--headless")
         options.add_argument("--window-size=1920,1080")
@@ -42,15 +43,6 @@ class YahooEquityCrawler:
         self.driver.get(self.BASE_URL)
 
         wait = WebDriverWait(self.driver, 20)
-
-        try:
-            cookie_btn = WebDriverWait(self.driver, 4).until(
-                EC.element_to_be_clickable(
-                    (By.XPATH, "//button[@name='reject' or contains(., 'Reject') or contains(., 'Aceitar')]"))
-            )
-            cookie_btn.click()
-        except:
-            pass
 
         try:
             region_container_xpath = "//div[contains(@class, 'menuContainer') and .//div[text()='Region']]"
@@ -151,7 +143,8 @@ class YahooEquityCrawler:
             try:
                 first_row_old = self.driver.find_element(By.CSS_SELECTOR,
                                                          'tr.row [data-testid-cell="ticker"] span.symbol').text
-            except:
+            except Exception as e:
+                logging.error(f"Erro ao passar de página: {e}")
                 first_row_old = ""
 
             self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", next_btn)
