@@ -3,7 +3,7 @@
 Crawler desenvolvido em Python para extrair dados de ações (Symbol, Name, Price) do Yahoo Finance Screener filtrando por região.
 
 ## Tecnologias Utilizadas
-* Python 3.8+
+* Python 3.10+
 * Selenium (Interação com browser dinâmico)
 * BeautifulSoup (Parsing de HTML)
 * Unittest (Testes automatizados)
@@ -20,4 +20,10 @@ Crawler desenvolvido em Python para extrair dados de ações (Symbol, Name, Pric
 1. Execute o arquivo main com a região
     ```bash
    python main.py Argentina
+    ```
+   
+## Testes
+1. Execute o arquivo main com a região
+    ```bash
+   python -m unittest .\tests\tests.py
     ```
